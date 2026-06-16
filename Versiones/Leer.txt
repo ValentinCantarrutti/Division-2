@@ -1,0 +1,3 @@
+La version 1.0 corresponde a un intento previo de crear la build, la 1.1 es la version con exito en la creacion de la build.
+
+La version 0.1r en adelante corresponde a las versiones de desarrollo interno reales, el r es una abreviatura de real.
