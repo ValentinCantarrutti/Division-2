@@ -19,12 +19,14 @@ public class Cursor : MonoBehaviour
     public float endWidth = 0.0f;
 
     private Camera cam;
-
     
     public List<Vector3> Points => points;
 
     private List<Vector3> points = new List<Vector3>();
     private List<float> pointTimes = new List<float>();
+
+    
+    private bool activo = true;
 
     void Awake()
     {
@@ -40,6 +42,13 @@ public class Cursor : MonoBehaviour
 
     void Update()
     {
+       
+        if (!activo)
+        {
+            Clear();
+            return;
+        }
+
         bool down = Input.GetMouseButtonDown(0);
         bool hold = Input.GetMouseButton(0);
 
@@ -68,6 +77,16 @@ public class Cursor : MonoBehaviour
         }
 
         UpdateTrail();
+    }
+
+    
+    public void SetActivo(bool estado)
+    {
+        activo = estado;
+        if (!estado)
+        {
+            Clear(); 
+        }
     }
 
     void AddPoint(Vector3 p)
