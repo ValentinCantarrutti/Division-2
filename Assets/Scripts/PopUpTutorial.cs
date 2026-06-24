@@ -4,6 +4,9 @@ using UnityEngine.UI;
 
 public class PopUpTutorial : MonoBehaviour
 {
+
+    public static bool TutorialActivo { get; private set; } = false;
+
     [Header("Componentes de la UI")]
     [Tooltip("Arrastrá acá el objeto Panel/Imagen que funciona como cartel pop-up.")]
     public GameObject panelPopUp;
@@ -28,25 +31,34 @@ public class PopUpTutorial : MonoBehaviour
     [Tooltip("Tiempo en segundos entre cada frame del GIF (ej: 0.15).")]
     public float tiempoPorFrame = 0.15f;
 
-    // Variables internas para guardar el camino
+
     private Vector3 posicionCentroDestino;
     private Vector3 posicionBotonOrigen;
+    private CanvasGroup canvasGroup;
+    
+
+    private CerrarAplicacion scriptPausa;
 
     void Start()
     {
-        // Guardamos la posición central ideal que ya configuraste en tu Canvas
         if (panelPopUp != null)
         {
             posicionCentroDestino = panelPopUp.transform.position;
+            
+
+            canvasGroup = panelPopUp.GetComponent<CanvasGroup>();
+            if (canvasGroup == null) canvasGroup = panelPopUp.AddComponent<CanvasGroup>();
         }
 
-        // Sistema de apertura automática la primera vez
+
+        scriptPausa = Object.FindFirstObjectByType<CerrarAplicacion>();
+
+
         if (PlayerPrefs.GetInt("TutorialHecho", 0) == 0)
         {
             if (panelPopUp != null)
             {
                 panelPopUp.SetActive(true);
-                if (botonTutorial != null) botonTutorial.interactable = false;
                 StartCoroutine(SecuenciaPopUp());
             }
         }
@@ -57,9 +69,29 @@ public class PopUpTutorial : MonoBehaviour
         }
     }
 
-    // Función que se asigna en el OnClick del botón de la esquina
+    void Update()
+    {
+
+        if (botonTutorial != null)
+        {
+            if (TutorialActivo) return;
+
+            if (scriptPausa != null && scriptPausa.panelSalir != null && scriptPausa.panelSalir.activeSelf)
+            {
+                if (botonTutorial.interactable) botonTutorial.interactable = false;
+            }
+            else
+            {
+                if (!botonTutorial.interactable) botonTutorial.interactable = true;
+            }
+        }
+    }
+
+
     public void MostrarTutorialPorBoton()
     {
+        if (scriptPausa != null && scriptPausa.panelSalir != null && scriptPausa.panelSalir.activeSelf) return;
+
         if (panelPopUp != null)
         {
             StopAllCoroutines(); 
@@ -70,30 +102,32 @@ public class PopUpTutorial : MonoBehaviour
 
     private IEnumerator SecuenciaPopUp()
     {
+
+        TutorialActivo = true;
+
         if (botonTutorial != null) botonTutorial.interactable = false;
 
-        // Detectamos dónde está el botón en la pantalla para usarlo como punto de salida
-        if (botonTutorial != null)
+
+        if (canvasGroup != null)
         {
-            posicionBotonOrigen = botonTutorial.transform.position;
-        }
-        else
-        {
-            posicionBotonOrigen = posicionCentroDestino;
+            canvasGroup.blocksRaycasts = true;
+            canvasGroup.interactable = true;
         }
 
-        // ==========================================
-        // 🚀 ENTRADA: NACE DESDE EL BOTÓN HACIA EL CENTRO
-        // ==========================================
+        if (botonTutorial != null) posicionBotonOrigen = botonTutorial.transform.position;
+        else posicionBotonOrigen = posicionCentroDestino;
+
+
+        StartCoroutine(RalentizarJuegoGradual());
+
+
         panelPopUp.transform.position = posicionBotonOrigen;
         panelPopUp.transform.localScale = Vector3.zero;
         
         float t = 0f;
         while (t < 1f)
         {
-            t += Time.deltaTime * velocidadAnimacionMenu;
-            
-            // Va del botón al centro mientras se agranda a 1.15 para el efecto "pop"
+            t += Time.unscaledDeltaTime * velocidadAnimacionMenu;
             panelPopUp.transform.position = Vector3.Lerp(posicionBotonOrigen, posicionCentroDestino, t);
             float escalaActual = Mathf.Lerp(0f, 1.15f, t);
             panelPopUp.transform.localScale = new Vector3(escalaActual, escalaActual, 1f);
@@ -103,8 +137,7 @@ public class PopUpTutorial : MonoBehaviour
         t = 0f;
         while (t < 1f)
         {
-            t += Time.deltaTime * (velocidadAnimacionMenu * 1.5f);
-            // Se asienta en su escala normal (1.0)
+            t += Time.unscaledDeltaTime * (velocidadAnimacionMenu * 1.5f);
             float escalaActual = Mathf.Lerp(1.15f, 1.0f, t);
             panelPopUp.transform.localScale = new Vector3(escalaActual, escalaActual, 1f);
             yield return null;
@@ -113,9 +146,7 @@ public class PopUpTutorial : MonoBehaviour
         panelPopUp.transform.position = posicionCentroDestino;
         panelPopUp.transform.localScale = Vector3.one;
 
-        // ==========================================
-        // 🎬 REPRODUCCIÓN DE LAS TUS ANIMACIONES
-        // ==========================================
+
         if (contenedorAnimacion != null)
         {
             for (int vuelta = 0; vuelta < 2; vuelta++)
@@ -123,7 +154,7 @@ public class PopUpTutorial : MonoBehaviour
                 for (int i = 0; i < animacion1.Length; i++)
                 {
                     contenedorAnimacion.sprite = animacion1[i];
-                    yield return new WaitForSeconds(tiempoPorFrame);
+                    yield return new WaitForSecondsRealtime(tiempoPorFrame);
                 }
             }
 
@@ -132,30 +163,31 @@ public class PopUpTutorial : MonoBehaviour
                 for (int i = 0; i < animacion2.Length; i++)
                 {
                     contenedorAnimacion.sprite = animacion2[i];
-                    yield return new WaitForSeconds(tiempoPorFrame);
+                    yield return new WaitForSecondsRealtime(tiempoPorFrame);
                 }
             }
         }
 
-        // ==========================================
-        // 📉 SALIDA: SE ENCOGE Y VUELVE AL BOTÓN
-        // ==========================================
+
+        if (canvasGroup != null)
+        {
+            canvasGroup.blocksRaycasts = false;
+            canvasGroup.interactable = false;
+        }
+
         t = 0f;
-        // Impulso hacia afuera antes de irse
         while (t < 1f)
         {
-            t += Time.deltaTime * (velocidadAnimacionMenu * 2f);
+            t += Time.unscaledDeltaTime * (velocidadAnimacionMenu * 2f);
             float escalaActual = Mathf.Lerp(1.0f, 1.12f, t);
             panelPopUp.transform.localScale = new Vector3(escalaActual, escalaActual, 1f);
             yield return null;
         }
 
         t = 0f;
-        // Viaja del centro directo al botón achicándose a 0
         while (t < 1f)
         {
-            t += Time.deltaTime * velocidadAnimacionMenu;
-            
+            t += Time.unscaledDeltaTime * velocidadAnimacionMenu;
             panelPopUp.transform.position = Vector3.Lerp(posicionCentroDestino, posicionBotonOrigen, t);
             float escalaActual = Mathf.Lerp(1.12f, 0f, t);
             panelPopUp.transform.localScale = new Vector3(escalaActual, escalaActual, 1f);
@@ -167,7 +199,28 @@ public class PopUpTutorial : MonoBehaviour
         PlayerPrefs.SetInt("TutorialHecho", 1);
         PlayerPrefs.Save();
 
-        if (botonTutorial != null) botonTutorial.interactable = true;
+        if (botonTutorial != null)
+        {
+            bool pausaAbierta = scriptPausa != null && scriptPausa.panelSalir != null && scriptPausa.panelSalir.activeSelf;
+            botonTutorial.interactable = !pausaAbierta;
+        }
+    }
+
+
+    private IEnumerator RalentizarJuegoGradual()
+    {
+        float tiempoTranscurrido = 0f;
+        float duracion = 0.5f;
+        float escalaInicial = Time.timeScale;
+
+        while (tiempoTranscurrido < duracion)
+        {
+            tiempoTranscurrido += Time.unscaledDeltaTime;
+            Time.timeScale = Mathf.Lerp(escalaInicial, 0f, tiempoTranscurrido / duracion);
+            yield return null;
+        }
+
+        Time.timeScale = 0f; // Aseguramos el freno total al terminar los 0.5s
     }
 
     private void panelSalirInmediato()
@@ -175,5 +228,11 @@ public class PopUpTutorial : MonoBehaviour
         panelPopUp.transform.position = posicionCentroDestino;
         panelPopUp.transform.localScale = new Vector3(0f, 0f, 1f);
         panelPopUp.SetActive(false);
+        
+
+        Time.timeScale = 1f;
+        
+
+        TutorialActivo = false;
     }
 }

@@ -93,7 +93,7 @@ public class BarraTiempo : MonoBehaviour
 
     tiempoActual -= segundos;
 
-    // Evitamos que el tiempo sea menor que cero
+    
     if (tiempoActual < 0)
     {
         tiempoActual = 0;

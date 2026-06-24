@@ -36,38 +36,55 @@ public class RandomizadorInicio : MonoBehaviour
                 continue;
             }
 
-            // 1. Guardamos los datos de posición y escala originales
+            
             Vector3 posicionOriginal = boton.cuboOriginalEscena.transform.position;
             Vector3 escalaOriginal = boton.cuboOriginalEscena.transform.localScale;
 
-            // 2. Elegimos un prefab al azar
+            
             GameObject prefabElegido = boton.prefabsPosibles[Random.Range(0, boton.prefabsPosibles.Length)];
 
-            // 3. Calculamos la rotación inteligente
-            Quaternion rotacionFinal = Quaternion.identity; // Por defecto: 0 grados en todo (perfectamente derecho)
+            
+            Quaternion rotacionFinal = Quaternion.identity; 
 
-            // 🚀 CLAVE: Si es el cubo de corte (BotonesMenu), le permitimos rotar. 
-            // Si es el Cuadradosimple, ignoramos la rotación y se queda en 0 grados.
             if (prefabElegido.GetComponent<BotonesMenu>() != null && boton.rotarAleatorio && boton.angulosPermitidos != null && boton.angulosPermitidos.Length > 0)
             {
                 float anguloAzar = boton.angulosPermitidos[Random.Range(0, boton.angulosPermitidos.Length)];
                 rotacionFinal = Quaternion.Euler(0f, 0f, anguloAzar);
             }
 
-            // 4. Clonamos el cubo
+            
+            Rigidbody2D rbPrefab = prefabElegido.GetComponent<Rigidbody2D>();
+            bool rbEstabaActivado = false;
+            if (rbPrefab != null)
+            {
+                rbEstabaActivado = rbPrefab.simulated;
+                rbPrefab.simulated = false; 
+            }
+
+            
             GameObject nuevoCubo = Instantiate(prefabElegido, posicionOriginal, rotacionFinal);
             nuevoCubo.transform.localScale = escalaOriginal;
 
-            // 🛡️ CONTROL FÍSICO LIMPIO PARA EL MENÚ
-            Rigidbody2D rb = nuevoCubo.GetComponent<Rigidbody2D>();
-            if (rb != null)
+            
+            if (rbPrefab != null)
             {
-                rb.bodyType = RigidbodyType2D.Kinematic; 
-                rb.velocity = Vector2.zero;             
-                rb.angularVelocity = 0f;                
+                rbPrefab.simulated = rbEstabaActivado;
             }
 
-            // 5. Destruimos el cubo viejo de la escena
+            
+            Rigidbody2D rbClon = nuevoCubo.GetComponent<Rigidbody2D>();
+            if (rbClon != null)
+            {
+                rbClon.bodyType = RigidbodyType2D.Kinematic; 
+                rbClon.constraints = RigidbodyConstraints2D.FreezeRotation; 
+                rbClon.velocity = Vector2.zero;             
+                rbClon.angularVelocity = 0f;                
+                
+                
+                rbClon.simulated = true; 
+            }
+
+            
             Destroy(boton.cuboOriginalEscena);
         }
     }

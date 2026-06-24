@@ -1,7 +1,7 @@
 using System.Collections;
 using UnityEngine;
 using UnityEngine.UI;
-using UnityEngine.SceneManagement; // Necesario para reiniciar la escena actual
+using UnityEngine.SceneManagement; 
 
 public class CerrarAplicacion : MonoBehaviour
 {
@@ -24,13 +24,37 @@ public class CerrarAplicacion : MonoBehaviour
         if (panelSalir != null) panelSalir.SetActive(false);
         if (botonSalir != null) botonSalir.interactable = true;
         
-        // Nos aseguramos de que el juego arranque a velocidad normal
+       
         Time.timeScale = 1f;
     }
 
-    // 🚪 FUNCIÓN 1: Abre la ventana, ralentiza el juego y desactiva el cursor
+    void Update()
+    {
+       
+        if (botonSalir != null)
+        {
+            
+            if (PopUpTutorial.TutorialActivo)
+            {
+                if (botonSalir.interactable) botonSalir.interactable = false;
+            }
+            else
+            {
+               
+                if (!botonSalir.interactable && (panelSalir == null || !panelSalir.activeSelf))
+                {
+                    botonSalir.interactable = true;
+                }
+            }
+        }
+    }
+
+    
     public void AbrirCartelSalida()
     {
+        
+        if (PopUpTutorial.TutorialActivo) return;
+
         if (panelSalir != null)
         {
             StopAllCoroutines();
@@ -41,7 +65,7 @@ public class CerrarAplicacion : MonoBehaviour
                 Cursor.Instance.SetActivo(false);
             }
 
-            // 🔥 NUEVO: Validar si ya estamos en el Menú (viendo si el slider de tiempo está activo o no)
+            
             ConfigurarBotonMenuSegunEstado();
 
             StartCoroutine(SecuenciaEntrada());
@@ -49,7 +73,7 @@ public class CerrarAplicacion : MonoBehaviour
         }
     }
 
-    // ❌ FUNCIÓN 2: Cierra la ventana, reactiva el juego y devuelve el cursor
+    
     public void CancelarSalida()
     {
         if (panelSalir != null)
@@ -66,7 +90,7 @@ public class CerrarAplicacion : MonoBehaviour
         }
     }
 
-    // ⚠️ FUNCIÓN 3: Cierra el juego de verdad
+    
     public void ConfirmarSalirDelJuego()
     {
         Debug.Log("Saliendo de la aplicación...");
@@ -77,37 +101,34 @@ public class CerrarAplicacion : MonoBehaviour
         #endif
     }
 
-    // 🏠 🔥 FUNCIÓN 4: Reinicia la escena exactamente igual que el Game Over
+    
     public void VolverAlMenuPrincipal()
     {
-        // Devolvemos el tiempo a la normalidad antes de recargar para que no empiece pausado
+       
         Time.timeScale = 1f;
         
-        // 🔥 Clave: Recarga la escena actual desde cero, igual que hace tu BarraTiempo
+       
         SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
     }
 
-    // 🛠️ 🔥 FUNCIÓN AUXILIAR: Como es una sola escena, chequeamos si la barra de tiempo está visible.
-    // Si la barra no está activa, significa que el jugador YA está en el menú principal.
+    
     private void ConfigurarBotonMenuSegunEstado()
     {
         if (botonVolverAlMenu != null && BarraTiempo.Instancia != null)
         {
-            // Si el slider de tiempo NO está activo en la pantalla, significa que ya estamos parados en el menú
+            
             if (!BarraTiempo.Instancia.sliderTiempo.gameObject.activeSelf)
             {
-                botonVolverAlMenu.interactable = false; // Se pone gris
+                botonVolverAlMenu.interactable = false; 
             }
             else
             {
-                botonVolverAlMenu.interactable = true;  // Se puede clickear en plena partida
+                botonVolverAlMenu.interactable = true;  
             }
         }
     }
 
-    // ==========================================
-    // EFECTO SLOW-MOTION GRADUAL (0.5 SEGUNDOS)
-    // ==========================================
+    
     private IEnumerator RalentizarJuego(bool pausar)
     {
         float tiempoTranscurrido = 0f;
@@ -125,9 +146,7 @@ public class CerrarAplicacion : MonoBehaviour
         Time.timeScale = escalaFinal; 
     }
 
-    // ==========================================
-    // ANIMACIONES DEL CARTEL
-    // ==========================================
+
 
     private IEnumerator SecuenciaEntrada()
     {
@@ -179,6 +198,6 @@ public class CerrarAplicacion : MonoBehaviour
         panelSalir.transform.localScale = new Vector3(0f, 0f, 1f);
         panelSalir.SetActive(false);
 
-        if (botonSalir != null) botonSalir.interactable = true;
+        if (botonSalir != null && !PopUpTutorial.TutorialActivo) botonSalir.interactable = true;
     }
 }

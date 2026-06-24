@@ -16,10 +16,13 @@ public class Spawnercubos : MonoBehaviour
     public float velocidadBase100Percent = 0.5f;
     
     [Tooltip("Cuánto aumenta la velocidad de spawn por cada cubo destruido.")]
-    public float incrementoPorCuboRoto = 0.05f;
+    public float incrementoPorCuboRoto = 0.05f; 
     
     private float velocidadActual;
     private float delayEntreSpawns;
+    
+
+    private float velocidadMaximaPermitida;
 
     [Header("Configuración de Salto (Rango Aleatorio)")]
     [Tooltip("Fuerza mínima de salto para los cubos (ej: 8).")]
@@ -58,7 +61,13 @@ public class Spawnercubos : MonoBehaviour
 
     void Start()
     {
-        velocidadActual = velocidadBase100Percent * 0.75f;
+
+        float velocidadInicial = velocidadBase100Percent * 0.75f;
+        velocidadActual = velocidadInicial;
+
+
+        velocidadMaximaPermitida = velocidadInicial + 0.50f;
+
         CalcularDelay();
 
         if (textoMaxComboMenu != null)
@@ -71,7 +80,6 @@ public class Spawnercubos : MonoBehaviour
 
     void Update()
     {
-        // En tu escena única, asumimos que usás tags para limpiar bloques antiguos al reiniciar
         int cubos = GameObject.FindGameObjectsWithTag("Cubo").Length;
 
         if (!sistemaActivo && cubos == 0)
@@ -88,7 +96,9 @@ public class Spawnercubos : MonoBehaviour
 
     public void RegistrarCuboRoto()
     {
-        velocidadActual += incrementoPorCuboRoto;
+
+        velocidadActual = Mathf.Min(velocidadActual + incrementoPorCuboRoto, velocidadMaximaPermitida);
+        
         CalcularDelay();
     }
 
@@ -135,11 +145,9 @@ public class Spawnercubos : MonoBehaviour
             Transform sp = spawnPoints[Random.Range(0, spawnPoints.Length)];
             GameObject cuboElegido = cubosPrefabs[Random.Range(0, cubosPrefabs.Length)];
 
-            // 1. Instanciamos en posición, rotación por defecto
             GameObject c = Instantiate(cuboElegido, sp.position, Quaternion.identity);
 
-            // ... (Lógica de colisiones hijos igual) ...
-             Collider2D colliderPadre = c.GetComponent<Collider2D>();
+            Collider2D colliderPadre = c.GetComponent<Collider2D>();
             Collider2D[] collidersHijos = c.GetComponentsInChildren<Collider2D>();
             if (colliderPadre != null && collidersHijos.Length > 0)
             {
@@ -149,13 +157,12 @@ public class Spawnercubos : MonoBehaviour
                 }
             }
 
+            // Componente de físicas
             Rigidbody2D rb = c.GetComponent<Rigidbody2D>();
             if (rb != null)
             {
-                // 🔥 SOLUCIÓN: Primero apagamos Constraints para que respete el giro
                 rb.freezeRotation = false;
 
-                // 🔥 NUEVO: Aplicamos rotación aleatoria al Transform (0, 90, 180, 270)
                 float[] angulosPosibles = { 0f, 90f, 180f, 270f };
                 float anguloAleatorioZ = angulosPosibles[Random.Range(0, angulosPosibles.Length)];
                 c.transform.rotation = Quaternion.Euler(0f, 0f, anguloAleatorioZ);
@@ -166,7 +173,6 @@ public class Spawnercubos : MonoBehaviour
                 if (direccionAleatoria) giro *= Random.Range(0, 2) == 0 ? 1f : -1f;
                 rb.angularVelocity = giro;
 
-                // Salto vertical puro (Vector2.up)
                 float fuerzaSaltoAleatoria = Random.Range(fuerzaSaltoMin, fuerzaSaltoMax);
                 rb.AddForce(new Vector2(0f, fuerzaSaltoAleatoria), ForceMode2D.Impulse);
             }

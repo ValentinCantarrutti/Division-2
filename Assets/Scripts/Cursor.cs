@@ -25,7 +25,6 @@ public class Cursor : MonoBehaviour
     private List<Vector3> points = new List<Vector3>();
     private List<float> pointTimes = new List<float>();
 
-    
     private bool activo = true;
 
     void Awake()
@@ -42,8 +41,8 @@ public class Cursor : MonoBehaviour
 
     void Update()
     {
-       
-        if (!activo)
+        
+        if (!activo || PopUpTutorial.TutorialActivo)
         {
             Clear();
             return;
@@ -79,7 +78,6 @@ public class Cursor : MonoBehaviour
         UpdateTrail();
     }
 
-    
     public void SetActivo(bool estado)
     {
         activo = estado;

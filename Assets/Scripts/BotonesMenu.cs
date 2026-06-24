@@ -29,6 +29,9 @@ public class BotonesMenu : MonoBehaviour
     {
         if (cortado) return;
 
+       
+        if (PopUpTutorial.TutorialActivo) return;
+
         if (Cursor.Instance != null && Cursor.Instance.Points.Count >= 2)
         {
             Vector3 puntoA = Cursor.Instance.Points[^2];
@@ -65,7 +68,6 @@ public class BotonesMenu : MonoBehaviour
         if (cortado) return;
         cortado = true;
 
-       
         if (sonidoCorte != null)
         {
             Vector3 posicionOido = Camera.main != null ? Camera.main.transform.position : transform.position;
@@ -73,19 +75,16 @@ public class BotonesMenu : MonoBehaviour
             AudioSource.PlayClipAtPoint(sonidoCorte, posicionOido, volumenSonido);
         }
 
-        
         if (BarraTiempo.Instancia != null)
         {
             BarraTiempo.Instancia.SumarTiempo(2f);
         }
 
-     
         if (Spawnercubos.Instancia != null)
         {
             Spawnercubos.Instancia.RegistrarCuboRoto();
         }
 
-       
         if (BarraTiempo.Instancia != null && BarraTiempo.Instancia.sliderTiempo.gameObject.activeSelf)
         {
             if (ComboManager.Instancia != null)
@@ -94,23 +93,19 @@ public class BotonesMenu : MonoBehaviour
             }
         }
 
-       
         mitadIzquierda.transform.SetParent(null);
         mitadDerecha.transform.SetParent(null);
 
-      
         Rigidbody2D rbIzq = mitadIzquierda.GetComponent<Rigidbody2D>();
         Rigidbody2D rbDer = mitadDerecha.GetComponent<Rigidbody2D>();
         rbIzq.bodyType = RigidbodyType2D.Dynamic;
         rbDer.bodyType = RigidbodyType2D.Dynamic;
 
-      
         rbIzq.AddForce(Vector2.left * 2f, ForceMode2D.Impulse);
         rbDer.AddForce(Vector2.right * 2f, ForceMode2D.Impulse);
         rbIzq.AddTorque(100f);
         rbDer.AddTorque(-100f);
 
-       
         Destroy(mitadIzquierda, 5f);
         Destroy(mitadDerecha, 5f);
         Destroy(gameObject);

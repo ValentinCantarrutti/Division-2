@@ -1,7 +1,7 @@
 using UnityEngine;
 using TMPro;
 using System.Collections;
-using UnityEngine.UI; // Importante para poder interactuar con componentes Button
+using UnityEngine.UI; 
 
 public class ComboManager : MonoBehaviour
 {
@@ -26,23 +26,23 @@ public class ComboManager : MonoBehaviour
 
     void Awake()
     {
-        // Regla del Singleton
+        
         if (Instancia == null) Instancia = this;
         else Destroy(gameObject);
 
-        // Carga el récord guardado en el dispositivo
+        
         maxComboHistorico = PlayerPrefs.GetInt("MaxComboGuardado", 0);
     }
 
     void Start()
     {
-        // El contador de la jugada arranca apagado en el menú
+        
         if (textoCombo != null) textoCombo.gameObject.SetActive(false);
         
-        // Muestra el récord en el menú principal apenas abre el juego
+        
         ActualizarTextoRecord();
 
-        // El botón del tutorial arranca 100% interactuable en el menú
+        
         if (botonTutorial != null) botonTutorial.interactable = true;
     }
 
@@ -59,7 +59,7 @@ public class ComboManager : MonoBehaviour
 
         ActualizarTextoRecord();
 
-        // 🔒 CONGELADO: El botón se sigue viendo en partida pero bloquea los clicks
+        
         if (botonTutorial != null) 
         {
             botonTutorial.interactable = false;
@@ -72,7 +72,7 @@ public class ComboManager : MonoBehaviour
 
         comboActual++;
 
-        // Si superamos la marca histórica en vivo, se actualiza y guarda inmediatamente
+       
         if (comboActual > maxComboHistorico)
         {
             maxComboHistorico = comboActual;
@@ -82,7 +82,7 @@ public class ComboManager : MonoBehaviour
 
         ActualizarUI();
 
-        // Feedback visual del combo (Efecto Pop)
+       
         if (corrutinaAnimacion != null) StopCoroutine(corrutinaAnimacion);
         corrutinaAnimacion = StartCoroutine(EfectoPopTexto());
     }
@@ -104,7 +104,7 @@ public class ComboManager : MonoBehaviour
 
         ActualizarTextoRecord(); 
 
-        // 🔓 LIBERADO: Al volver al menú principal, el botón vuelve a responder clicks
+        
         if (botonTutorial != null) 
         {
             botonTutorial.interactable = true;
@@ -129,7 +129,7 @@ public class ComboManager : MonoBehaviour
             {
                 textoMaxCombo.gameObject.SetActive(true);
             }
-            // Formato con etiquetas enriquecidas de TextMeshPro para la negrita
+            
             textoMaxCombo.text = $"MaxCombo: <b>{maxComboHistorico}</b>";
         }
     }
